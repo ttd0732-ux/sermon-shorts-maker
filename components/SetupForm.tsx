@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { loadSetting, saveSetting } from "@/lib/settings";
+import { verifyKey } from "@/lib/client";
 import UserGuide from "./UserGuide";
 
 export interface SetupValues {
@@ -31,6 +32,23 @@ export default function SetupForm({
   const [churchName, setChurchName] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  // API 키 연결 상태: idle(미확인) | checking(확인 중) | ok(연결됨) | bad(연결 안 됨)
+  const [keyStatus, setKeyStatus] = useState<"idle" | "checking" | "ok" | "bad">("idle");
+
+  async function checkKey(key?: string) {
+    const k = (key ?? apiKey).trim();
+    if (!k) {
+      setKeyStatus("bad");
+      return;
+    }
+    setKeyStatus("checking");
+    try {
+      const res = await verifyKey(k);
+      setKeyStatus(res.ok ? "ok" : "bad");
+    } catch {
+      setKeyStatus("bad");
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +58,8 @@ export default function SetupForm({
       if (k) {
         setApiKey(k);
         setSavedKey(true);
+        // 저장된 키가 있으면 켜자마자 자동으로 연결 확인 — 버튼을 누르지 않아도 됩니다.
+        void checkKey(k);
       }
       const c = await loadSetting("church_name");
       if (!cancelled && c) setChurchName(c);
@@ -87,6 +107,7 @@ export default function SetupForm({
               onChange={(e) => {
                 setApiKey(e.target.value);
                 setSavedKey(false);
+                setKeyStatus("idle");
               }}
               placeholder="AIza..."
               className="input pr-12"
@@ -111,6 +132,26 @@ export default function SetupForm({
             </a>
             받으세요.
           </p>
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => void checkKey()}
+              disabled={keyStatus === "checking" || !apiKey.trim()}
+              className="rounded-xl border border-line bg-panel2 px-5 py-2.5 font-bold text-white transition hover:border-accent/60 disabled:opacity-40"
+            >
+              {keyStatus === "checking" ? "확인 중..." : "🔗 연결 확인"}
+            </button>
+          </div>
+          {keyStatus === "ok" && (
+            <div className="mt-3 rounded-xl border-2 border-green-500 bg-green-500/10 px-4 py-3 text-xl font-extrabold text-green-400">
+              ✅ 연결됐다
+            </div>
+          )}
+          {keyStatus === "bad" && (
+            <div className="mt-3 rounded-xl border-2 border-red-500 bg-red-500/10 px-4 py-3 text-lg font-extrabold text-red-400">
+              ❌ 연결 안 됨 — 키를 확인해 주세요
+            </div>
+          )}
         </Field>
 
         {/* URL */}

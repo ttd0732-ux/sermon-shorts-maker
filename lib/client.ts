@@ -71,6 +71,16 @@ export async function renderShort(
   return pollJob(data.jobId, onProgress);
 }
 
+export async function verifyKey(apiKey: string): Promise<{ ok: boolean; error?: string }> {
+  const r = await fetch("/api/verify-key", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apiKey }),
+  });
+  const data = await readJson(r);
+  return { ok: !!data.ok, error: data.error as string | undefined };
+}
+
 export async function addCustomRange(args: {
   videoId: string;
   startSec: number;
