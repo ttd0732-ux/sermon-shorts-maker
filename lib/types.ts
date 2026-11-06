@@ -11,7 +11,33 @@ export interface WordToken {
   w: string;
 }
 
-export type TemplateId = "dark" | "light";
+export type TemplateId =
+  | "dark"
+  | "light"
+  | "gold-pulpit"
+  | "royal-navy"
+  | "classic-crimson"
+  | "emerald-grace"
+  | "broadcast-tv"
+  | "black-gold-lux"
+  | "youth-neon"
+  | "sns-viral-reel"
+  | "cyber-worship"
+  | "minimal-typo"
+  | "energetic-orange"
+  | "mint-fresh"
+  | "dawn-prayer"
+  | "starlight-night"
+  | "olive-garden"
+  | "warm-sunset"
+  | "calm-ocean"
+  | "wood-bible"
+  | "bible-card"
+  | "chalkboard-note"
+  | "thanksgiving-harvest"
+  | "cinematic-worship"
+  | "passion-cross"
+  | "revival-fire";
 
 // How the source frame fills the 1080x960 video band.
 //   crop    — scale to height, center-crop width. Fills the band; sides are cut.

@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { loadSetting, saveSetting } from "@/lib/settings";
-import type { TemplateId } from "@/lib/types";
-import { TEMPLATES } from "@/lib/layout";
 
 export interface SetupValues {
   apiKey: string;
   url: string;
   targetSec: number;
-  template: TemplateId;
   churchName: string;
 }
 
@@ -30,7 +27,6 @@ export default function SetupForm({
   const [savedKey, setSavedKey] = useState(false);
   const [url, setUrl] = useState("");
   const [targetSec, setTargetSec] = useState(60);
-  const [template, setTemplate] = useState<TemplateId>("dark");
   const [churchName, setChurchName] = useState("");
   const [showKey, setShowKey] = useState(false);
 
@@ -55,7 +51,7 @@ export default function SetupForm({
     if (!url.trim()) return;
     void saveSetting("gemini_api_key", apiKey.trim());
     void saveSetting("church_name", churchName.trim());
-    onSubmit({ apiKey: apiKey.trim(), url: url.trim(), targetSec, template, churchName: churchName.trim() });
+    onSubmit({ apiKey: apiKey.trim(), url: url.trim(), targetSec, churchName: churchName.trim() });
   }
 
   return (
@@ -140,22 +136,8 @@ export default function SetupForm({
           </div>
         </Field>
 
-        {/* template */}
-        <Field n={4} label="템플릿 (스타일)">
-          <div className="grid grid-cols-2 gap-3">
-            {(Object.keys(TEMPLATES) as TemplateId[]).map((id) => (
-              <TemplateSwatch
-                key={id}
-                id={id}
-                active={template === id}
-                onClick={() => setTemplate(id)}
-              />
-            ))}
-          </div>
-        </Field>
-
         {/* church name */}
-        <Field n={5} label="교회명 (선택)" hint="영상 맨 아래에 작게 표시돼요">
+        <Field n={4} label="교회명 (선택)" hint="영상 맨 아래에 작게 표시돼요">
           <input
             value={churchName}
             onChange={(e) => setChurchName(e.target.value)}
@@ -202,43 +184,5 @@ function Field({
       </div>
       {children}
     </div>
-  );
-}
-
-function TemplateSwatch({
-  id,
-  active,
-  onClick,
-}: {
-  id: TemplateId;
-  active: boolean;
-  onClick: () => void;
-}) {
-  const t = TEMPLATES[id];
-  return (
-    <button
-      onClick={onClick}
-      className={`overflow-hidden rounded-xl border-2 transition ${
-        active ? "border-accent" : "border-line hover:border-accent/40"
-      }`}
-    >
-      <div className="aspect-[9/16] w-full p-3 text-center" style={{ background: t.bg }}>
-        <div className="flex h-full flex-col justify-between">
-          <div>
-            <div className="text-[11px] font-extrabold leading-tight" style={{ color: t.titleLine1 }}>
-              내 열심보다
-            </div>
-            <div className="text-[13px] font-extrabold leading-tight" style={{ color: t.titleLine2 }}>
-              하나님의 이끄심
-            </div>
-          </div>
-          <div className="mx-auto h-8 w-full rounded bg-black/20" />
-          <div className="text-[9px] font-medium" style={{ color: t.subtitle }}>
-            하나님이 나를 이끄십니다
-          </div>
-        </div>
-      </div>
-      <div className="bg-panel2 py-1.5 text-xs font-bold">{t.label}</div>
-    </button>
   );
 }

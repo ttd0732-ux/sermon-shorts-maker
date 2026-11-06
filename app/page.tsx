@@ -3,12 +3,23 @@
 import { useState } from "react";
 import SetupForm, { type SetupValues } from "@/components/SetupForm";
 import HighlightList from "@/components/HighlightList";
+import DesignStep from "@/components/DesignStep";
 import ResultList, { type RenderedItem } from "@/components/ResultList";
 import { analyze, renderShort } from "@/lib/client";
 import type { AnalyzeResult, Highlight, SubtitleOptions, TemplateId } from "@/lib/types";
 import { DEFAULT_TITLE_STYLE } from "@/lib/types";
 
-type Step = "setup" | "analyzing" | "select" | "result";
+// 4단계: 1 링크 입력 → 2 쇼츠 목록 → 3 디자인 선택 → 4 다운로드·올리기
+type Step = "setup" | "analyzing" | "select" | "design" | "publish";
+
+const STEP_LABELS = ["1 링크", "2 쇼츠 목록", "3 디자인", "4 다운로드·올리기"];
+
+function stepIndex(step: Step): number {
+  if (step === "setup" || step === "analyzing") return 0;
+  if (step === "select") return 1;
+  if (step === "design") return 2;
+  return 3;
+}
 
 export default function Home() {
   const [step, setStep] = useState<Step>("setup");
@@ -24,6 +35,8 @@ export default function Home() {
     size: "large",
     position: "band",
   });
+  // 3단계에서 고른 디자인 (기본 다크). 렌더링은 이 디자인 하나로 한다.
+  const [design, setDesign] = useState<TemplateId>("dark");
   const [items, setItems] = useState<RenderedItem[]>([]);
 
   // Back to a clean start for a different sermon link. Everything here belongs
@@ -81,7 +94,8 @@ export default function Home() {
     }
   }
 
-  async function handleCreate(selected: Highlight[]) {
+  // 2단계에서 고른 쇼츠를 확정하고 3단계(디자인 선택)로 간다. 아직 렌더링하지 않는다.
+  function handleCreate(selected: Highlight[]) {
     if (!setup || !analysis) return;
     // Freeze the current settings onto each clip. From here on every clip owns
     // its own look, so the result screen can tweak one without touching the rest.
@@ -93,10 +107,17 @@ export default function Home() {
     setItems(
       baked.map((h) => ({ highlight: h, status: "pending", progress: 0, message: "대기 중" })),
     );
-    setStep("result");
+    setStep("design");
+  }
+
+  // 3단계에서 디자인을 확정하면 그 디자인 하나로 모두 렌더링하고 4단계로 간다.
+  async function handleDesignConfirm(designId: TemplateId) {
+    if (!setup) return;
+    setDesign(designId);
+    setStep("publish");
     // render sequentially (source download is shared/cached; ffmpeg is CPU-bound)
-    for (const h of baked) {
-      await renderOne(h, setup, setup.template);
+    for (const it of items) {
+      await renderOne(it.highlight, setup, designId);
     }
   }
 
@@ -109,11 +130,36 @@ export default function Home() {
       prev.map((it) => (it.highlight.id === highlightId ? { ...it, highlight: updated } : it)),
     );
     setHighlights((prev) => prev.map((h) => (h.id === highlightId ? updated : h)));
-    await renderOne(updated, setup, setup.template);
+    await renderOne(updated, setup, design);
   }
+
+  const idx = stepIndex(step);
 
   return (
     <main className="min-h-screen bg-ink px-4 py-10 sm:py-16">
+      {/* 4단계 진행 표시 */}
+      <div className="mx-auto mb-8 flex max-w-2xl items-center justify-center gap-2">
+        {STEP_LABELS.map((label, i) => (
+          <div key={label} className="flex items-center gap-2">
+            <span
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-extrabold ${
+                i === idx
+                  ? "bg-accent text-black"
+                  : i < idx
+                    ? "bg-accent/30 text-accent"
+                    : "bg-panel2 text-muted"
+              }`}
+            >
+              {i + 1}
+            </span>
+            <span className={`text-xs font-bold ${i === idx ? "text-white" : "text-muted"}`}>
+              {label}
+            </span>
+            {i < STEP_LABELS.length - 1 && <span className="mx-1 text-muted">›</span>}
+          </div>
+        ))}
+      </div>
+
       {error && step === "setup" && (
         <div className="mx-auto mb-6 max-w-2xl rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-300">
           {error}
@@ -141,7 +187,7 @@ export default function Home() {
           highlights={highlights}
           setHighlights={setHighlights}
           videoId={analysis.meta.videoId}
-          apiKey={setup?.apiKey || ""}
+          apiKey={setup?.apiKey ?? ""}
           subtitles={subtitles}
           setSubtitles={setSubtitles}
           onCreate={handleCreate}
@@ -150,11 +196,20 @@ export default function Home() {
         />
       )}
 
-      {step === "result" && (
+      {step === "design" && (
+        <DesignStep
+          selected={design}
+          clipCount={items.length}
+          onConfirm={handleDesignConfirm}
+          onBack={() => setStep("select")}
+        />
+      )}
+
+      {step === "publish" && (
         <ResultList
           items={items}
           onRerender={handleRerender}
-          onBack={() => setStep("select")}
+          onBack={() => setStep("design")}
           onHome={handleHome}
           churchName={setup?.churchName}
           sourceUrl={setup?.url}

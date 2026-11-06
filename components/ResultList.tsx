@@ -41,10 +41,10 @@ export default function ResultList({
   return (
     <div className="mx-auto w-full max-w-4xl">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-extrabold">쇼츠가 완성됐어요 🎉</h2>
+        <h2 className="text-2xl font-extrabold">4단계: 영상 다운로드 & 유튜브에 올리기</h2>
         <div className="flex flex-shrink-0 items-center gap-1">
           <button onClick={onBack} className="rounded-lg px-3 py-2 text-sm text-muted hover:text-white">
-            ← 구간 다시 고르기
+            ← 디자인 다시 고르기
           </button>
           <button
             onClick={() => {
@@ -58,6 +58,40 @@ export default function ResultList({
             🏠 홈으로
           </button>
         </div>
+      </div>
+
+      {/* 유튜브에 직접 올리는 방법 — 앱은 영상을 만들고, 올리는 것은 유튜브 스튜디오에서 직접 합니다 */}
+      <div className="mb-6 rounded-2xl border border-line bg-panel p-5">
+        <h3 className="font-bold">📺 유튜브에 직접 올리는 방법</h3>
+        <p className="mt-1 text-sm text-muted">
+          아래 순서대로 하시면 됩니다. 각 영상의 [⬇ 다운로드]로 MP4 파일을 받은 뒤,
+          유튜브 스튜디오에서 올리세요.
+        </p>
+        <ol className="mt-3 space-y-2 text-sm leading-relaxed">
+          <GuideStep n={1}>만든 쇼츠 아래 [⬇ 다운로드]를 눌러 MP4 파일을 받으세요.</GuideStep>
+          <GuideStep n={2}>
+            유튜브 스튜디오(
+            <a
+              href="https://studio.youtube.com"
+              target="_blank"
+              rel="noreferrer"
+              className="font-bold text-accent underline"
+            >
+              studio.youtube.com
+            </a>
+            )를 여세요.
+          </GuideStep>
+          <GuideStep n={3}>오른쪽 위 [만들기]를 누른 뒤 [동영상 업로드]를 선택하세요.</GuideStep>
+          <GuideStep n={4}>방금 받은 MP4 파일을 선택하거나 끌어다 놓으세요.</GuideStep>
+          <GuideStep n={5}>
+            각 영상 아래 [⬆ 직접 올리기]를 눌러 제목·설명·해시태그를 [복사]한 뒤,
+            유튜브에 그대로 붙여넣으세요.
+          </GuideStep>
+          <GuideStep n={6}>
+            공개 상태를 &lsquo;예약&rsquo;으로 바꾸고, 공개할 날짜와 시간을 정하세요.
+          </GuideStep>
+          <GuideStep n={7}>[게시]를 누르면 예약이 끝납니다. 정한 시간에 유튜브가 알아서 공개합니다.</GuideStep>
+        </ol>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -96,9 +130,9 @@ export default function ResultList({
                 </div>
                 <button
                   onClick={() => setUploading(it)}
-                  className="mt-2 w-full rounded-xl bg-accent py-2.5 text-sm font-extrabold text-black hover:bg-accent2"
+                  className="mt-2 w-full rounded-xl border border-line bg-panel2 py-2.5 text-sm font-bold hover:border-accent"
                 >
-                  ⬆ 유튜브에 올리기
+                  ⬆ 직접 올리기 (제목·설명 복사)
                 </button>
               </>
             ) : it.status === "error" ? (
@@ -273,6 +307,17 @@ function TabBtn({
     >
       {children}
     </button>
+  );
+}
+
+function GuideStep({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-2">
+      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-accent">
+        {n}
+      </span>
+      <span>{children}</span>
+    </li>
   );
 }
 

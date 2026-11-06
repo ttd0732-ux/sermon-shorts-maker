@@ -1,0 +1,37 @@
+{
+  "name": "sermon-shorts-studio",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3939",
+    "build": "next build",
+    "start": "next start -p 3939",
+    "electron:prepare": "node electron/prepare.mjs",
+    "electron:dev": "electron .",
+    "dist": "next build && node electron/prepare.mjs && electron-builder"
+  },
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "ffmpeg-static": "^5.3.0",
+    "next": "^16.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "yt-dlp-wrap": "^2.3.12",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "autoprefixer": "^10.4.20",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.2",
+    "postcss": "^8.4.49",
+    "rcedit": "^5.0.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "wait-on": "^8.0.5"
+  },
+  "main": "electron/main.js"
+}
