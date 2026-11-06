@@ -4,6 +4,7 @@ import { createJob, runJob } from "@/lib/jobs";
 import { fetchVideo } from "@/lib/pipeline";
 import { renderHighlight } from "@/lib/render";
 import { outUrl } from "@/lib/storage";
+import { guardJson } from "@/lib/routeGuard";
 import type { RenderRequest, Cue } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -17,7 +18,8 @@ function styleTag(o: unknown): string {
 }
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as RenderRequest & { url: string };
+  return guardJson(async () => {
+    const body = (await req.json()) as RenderRequest & { url: string };
   const { url, videoId, highlight, template, churchName } = body;
   if (!url || !videoId || !highlight) {
     return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 });
@@ -68,5 +70,6 @@ export async function POST(req: NextRequest) {
     return { url: outUrl(outName), name: outName };
   });
 
-  return NextResponse.json({ jobId: job.id });
+    return NextResponse.json({ jobId: job.id });
+  });
 }

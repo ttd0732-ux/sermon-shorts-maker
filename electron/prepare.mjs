@@ -64,6 +64,41 @@ fs.mkdirSync(build, { recursive: true });
 // 1) the standalone server tree -> build/app
 copyDir(standalone, path.join(build, "app"));
 
+// 1b) Repair the file tracer's yt-dlp-wrap copies (found 2026-11-07).
+//
+// The tracer copies yt-dlp-wrap as package.json ONLY — dist/index.js (its
+// "main") never lands in standalone, so every route importing lib/pipeline
+// 500s with an EMPTY body and the user sees "Unexpected end of JSON input".
+// next.config's outputFileTracingIncludes should pull dist in; this is the
+// backstop: copy dist into every traced yt-dlp-wrap dir (the hashed
+// .next/node_modules/yt-dlp-wrap-*/ copy the server actually loads, and the
+// plain node_modules/yt-dlp-wrap/ copy), and FAIL THE BUILD LOUDLY if the
+// repair cannot be done — a broken app must never ship silently again.
+{
+  const srcDist = path.join(root, "node_modules", "yt-dlp-wrap", "dist");
+  must(path.join(srcDist, "index.js"), "yt-dlp-wrap dist/index.js (node_modules)");
+  const targets = [];
+  const plainDir = path.join(build, "app", "node_modules", "yt-dlp-wrap");
+  if (fs.existsSync(plainDir)) targets.push(plainDir);
+  const hashedParent = path.join(build, "app", ".next", "node_modules");
+  if (fs.existsSync(hashedParent)) {
+    for (const d of fs.readdirSync(hashedParent)) {
+      if (d.startsWith("yt-dlp-wrap-")) targets.push(path.join(hashedParent, d));
+    }
+  }
+  if (!targets.length) throw new Error("yt-dlp-wrap 추적 복사본을 찾을 수 없습니다.");
+  for (const t of targets) {
+    fs.mkdirSync(path.join(t, "dist"), { recursive: true });
+    for (const f of fs.readdirSync(srcDist)) {
+      fs.copyFileSync(path.join(srcDist, f), path.join(t, "dist", f));
+    }
+    if (!fs.existsSync(path.join(t, "dist", "index.js"))) {
+      throw new Error(`yt-dlp-wrap 복구 실패: ${t}`);
+    }
+  }
+  console.log(`  yt-dlp-wrap dist 복구 완료 (${targets.length}곳)`);
+}
+
 // 2) static assets next build leaves behind
 must(path.join(root, ".next", "static"), ".next/static");
 copyDir(path.join(root, ".next", "static"), path.join(build, "app", ".next", "static"));

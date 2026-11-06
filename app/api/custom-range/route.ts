@@ -3,12 +3,14 @@ import { randomUUID } from "node:crypto";
 import { loadCues } from "@/lib/pipeline";
 import { cuesInRange } from "@/lib/captions";
 import { generateTitle } from "@/lib/gemini";
+import { guardJson } from "@/lib/routeGuard";
 import type { Highlight } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const { videoId, startSec, endSec, apiKey } = await req.json();
+  return guardJson(async () => {
+    const { videoId, startSec, endSec, apiKey } = await req.json();
   const key = apiKey || process.env.GEMINI_API_KEY;
   const cues = loadCues(videoId);
   if (!cues) return NextResponse.json({ error: "자막 캐시가 없습니다. 다시 분석해 주세요." }, { status: 400 });
@@ -35,5 +37,6 @@ export async function POST(req: NextRequest) {
     sectionTitle: "직접 추가",
     cues: inRange,
   };
-  return NextResponse.json({ highlight });
+    return NextResponse.json({ highlight });
+  });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import { outPath } from "@/lib/storage";
+import { guardJson } from "@/lib/routeGuard";
 
 export const runtime = "nodejs";
 
@@ -22,8 +23,9 @@ function sanitizeDownloadName(raw: string | null): string | null {
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
-  const { name } = await params;
-  const safe = name.replace(/[^\w.\-]/g, "");
+  return guardJson(async () => {
+    const { name } = await params;
+    const safe = name.replace(/[^\w.\-]/g, "");
   const p = outPath(safe);
   if (!fs.existsSync(p)) return NextResponse.json({ error: "not found" }, { status: 404 });
 
@@ -59,12 +61,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ name
   }
 
   const stream = fs.createReadStream(p);
-  return new NextResponse(stream as unknown as ReadableStream, {
-    headers: {
-      "Content-Length": String(stat.size),
-      "Content-Type": "video/mp4",
-      "Accept-Ranges": "bytes",
-      "Content-Disposition": dispo,
-    },
+    return new NextResponse(stream as unknown as ReadableStream, {
+      headers: {
+        "Content-Length": String(stat.size),
+        "Content-Type": "video/mp4",
+        "Accept-Ranges": "bytes",
+        "Content-Disposition": dispo,
+      },
+    });
   });
 }

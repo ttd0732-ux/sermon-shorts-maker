@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { loadSetting, saveSetting } from "@/lib/settings";
+import UserGuide from "./UserGuide";
 
 export interface SetupValues {
   apiKey: string;
@@ -29,6 +30,7 @@ export default function SetupForm({
   const [targetSec, setTargetSec] = useState(60);
   const [churchName, setChurchName] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +68,13 @@ export default function SetupForm({
           설교(예배) 유튜브 링크를 넣으면 AI가 하이라이트를 찾아
           <br className="hidden sm:block" /> 쇼츠를 만들어 드립니다 (자막 on/off 가능).
         </p>
+        <button
+          type="button"
+          onClick={() => setShowGuide(true)}
+          className="mt-4 rounded-xl border border-line bg-panel2 px-5 py-2.5 font-bold text-white transition hover:border-accent/60"
+        >
+          📖 사용 설명서
+        </button>
       </div>
 
       <div className="rounded-2xl border border-line bg-panel p-6 shadow-xl sm:p-8">
@@ -158,6 +167,7 @@ export default function SetupForm({
           본인이 권리를 가진 설교 영상(예: 소속 교회가 업로드한 영상)에만 사용하세요.
         </p>
       </div>
+      {showGuide && <UserGuide onClose={() => setShowGuide(false)} />}
     </div>
   );
 }

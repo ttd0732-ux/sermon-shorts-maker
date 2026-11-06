@@ -39,8 +39,16 @@ const nextConfig = {
   // shows up outside the repo — run standalone from the project dir and Node
   // resolves the missing file from the real node_modules and it appears to work.
   // Force the whole prod runtime set in; it's ~4MB.
+  //
+  // Same class of bug, found 2026-11-07: the tracer copies yt-dlp-wrap as
+  // package.json ONLY — dist/index.js (its "main") never lands in standalone,
+  // so every route importing lib/pipeline 500s with an EMPTY body and the
+  // client shows "Unexpected end of JSON input". Force dist in too.
   outputFileTracingIncludes: {
-    "*": ["./node_modules/next/dist/compiled/next-server/*.prod.js"],
+    "*": [
+      "./node_modules/next/dist/compiled/next-server/*.prod.js",
+      "./node_modules/yt-dlp-wrap/dist/**/*",
+    ],
   },
 };
 
