@@ -8,6 +8,7 @@ directories:
 
 # Stamps the icon onto the app .exe with rcedit — electron-builder's own step
 # for that is unavailable here. See electron/afterPack.mjs.
+# (On Linux this needs wine: `wine64` in PATH. Installed 2026-11-06.)
 afterPack: electron/afterPack.mjs
 
 # Only the Electron entry goes inside the app bundle. The Next server, fonts and
@@ -34,6 +35,25 @@ extraResources:
   - from: build/ffmpeg.exe
     to: ffmpeg.exe
 
+mac:
+  icon: build/icon.icns
+  # No Apple Developer certificate: build unsigned. macOS Gatekeeper will
+  # warn ("cannot verify the developer") — open with right-click → Open.
+  identity: null
+  target:
+    # NOTE: arch "universal" cannot be built on Linux — @electron/universal
+    # needs macOS lipo ("only supported on darwin platforms"). Build the two
+    # arches separately instead; ${arch} keeps the two files apart.
+    # NOTE 2: target "pkg" cannot be built on Linux — it needs macOS
+    # productbuild ("spawn productbuild ENOENT"). .pkg can only be made on a
+    # Mac.
+    # NOTE 3: target "dmg" cannot be built on Linux either — it needs macOS
+    # hdiutil ("spawn hdiutil ENOENT"). Fall back to zip: the .app zipped up,
+    # download -> double-click to unzip -> drag to Applications (or run it).
+    - target: zip
+      arch: [x64, arm64]
+  artifactName: SermonShortsMaker-Setup-${version}-mac-${arch}.${ext}
+
 win:
   icon: build/icon.ico
   target:
@@ -49,8 +69,10 @@ win:
   signAndEditExecutable: false
 
 nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
+  # One-click install: no welcome page, no folder choice — double-click and it
+  # installs straight to %LOCALAPPDATA%. Beginners should not be asked.
+  oneClick: true
+  allowToChangeInstallationDirectory: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: 설교 쇼츠 메이커
